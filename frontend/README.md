@@ -57,7 +57,7 @@ Then open:
 http://localhost:5500
 ```
 
-## 📡 Visitor Counter (Mock for Now)
+## Visitor Counter (Mock for Now)
 
 ```js
 function loadMockVisitorCount() {
