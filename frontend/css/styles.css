@@ -1,0 +1,28 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #f7f7f7;
+  color: #333;
+}
+
+#resume-container {
+  max-width: 900px;
+  margin: auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 8px;
+}
+
+#visitor-counter {
+  margin-top: 2rem;
+  font-weight: bold;
+}
+
+.profile-pic {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  margin-bottom: 1rem;
+}
