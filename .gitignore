@@ -20,3 +20,5 @@ rad.json
 *.flf
 #Test results file
 TestResults.xml
+#Ignore any .vscode or .dscode-type files
+*.dscode
