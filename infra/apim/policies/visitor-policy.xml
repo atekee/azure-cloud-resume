@@ -1,0 +1,50 @@
+<policies>
+    <inbound>
+        <base />
+        <!-- CORS must come BEFORE auth checks -->
+        <cors allow-credentials="false">
+            <allowed-origins>
+                <origin>https://resume.atabaykadiroglu.com</origin>
+                <origin>https://atabaykadiroglu.com</origin>
+            </allowed-origins>
+            <allowed-methods>
+                <method>GET</method>
+                <method>POST</method>
+            </allowed-methods>
+            <allowed-headers>
+                <header>x-api-key</header>
+                <header>Content-Type</header>
+            </allowed-headers>
+        </cors>
+        <!-- Your API Key check -->
+        <choose>
+            <when condition="@( !context.Request.Headers.ContainsKey("x-api-key")
+                      || context.Request.Headers["x-api-key"][0] != "{{PublicApiKey}}" )">
+                <return-response>
+                    <set-status code="401" reason="Unauthorized" />
+                    <set-header name="Content-Type" exists-action="override">
+                        <value>application/json</value>
+                    </set-header>
+                    <set-body>{
+              "error": "Missing or invalid API key"
+            }</set-body>
+                </return-response>
+            </when>
+        </choose>
+        <!-- Rate limiting -->
+        <rate-limit calls="20" renewal-period="60" />
+        <!-- Inject function key -->
+        <set-header name="x-functions-key" exists-action="override">
+            <value>{{FunctionKey}}</value>
+        </set-header>
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>

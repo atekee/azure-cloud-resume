@@ -1,0 +1,63 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "cosmosAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Globally unique name for your Cosmos DB account."
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "tableName": {
+      "type": "string",
+      "defaultValue": "VisitorTable"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "apiVersion": "2023-04-15",
+      "name": "[parameters('cosmosAccountName')]",
+      "location": "[parameters('location')]",
+      "kind": "GlobalDocumentDB",
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "databaseAccountOfferType": "Standard",
+        "locations": [
+          {
+            "locationName": "[parameters('location')]",
+            "failoverPriority": 0
+          }
+        ],
+        "capabilities": [
+          {
+            "name": "EnableTable"
+          }
+        ],
+        "enableFreeTier": true,
+        "consistencyPolicy": {
+          "defaultConsistencyLevel": "Session"
+        }
+      }
+    },
+{
+  "type": "Microsoft.DocumentDB/databaseAccounts/tables",
+  "apiVersion": "2023-04-15",
+  "name": "[format('{0}/{1}', parameters('cosmosAccountName'), parameters('tableName'))]",
+  "dependsOn": [
+    "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosAccountName'))]"
+  ],
+  "properties": {
+    "resource": {
+      "id": "[parameters('tableName')]"
+    }
+  }
+}
+  ]
+}
