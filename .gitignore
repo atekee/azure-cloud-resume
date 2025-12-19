@@ -22,3 +22,5 @@ rad.json
 TestResults.xml
 #Ignore any .vscode or .dscode-type files
 *.dscode
+#Pycache files
+__pycache__/
