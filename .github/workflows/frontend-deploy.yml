@@ -1,0 +1,38 @@
+name: Deploy Frontend to Azure Storage
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Replace API placeholders in main.js
+      run: |
+        sed -i "s|__API_BASE_URL__|${{ secrets.API_BASE_URL }}|g" frontend/js/main.js
+        sed -i "s|__API_KEY_PLACEHOLDER__|${{ secrets.PUBLIC_API_KEY }}|g" frontend/js/main.js
+
+    - name: Upload frontend files to Azure Storage
+      uses: azure/cli@v2
+      with:
+        inlineScript: |
+          az storage blob upload-batch \
+            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
+            --destination '$web' \
+            --source frontend \
+            --sas-token "${{ secrets.AZURE_STORAGE_SAS_TOKEN }}" \
+            --overwrite true
+
+    - name: Purge Cloudflare Cache
+      if: ${{ success() }}
+      run: |
+        curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/purge_cache" \
+          -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          --data '{"purge_everything":true}'
