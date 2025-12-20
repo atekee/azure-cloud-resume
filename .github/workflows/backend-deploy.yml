@@ -22,22 +22,16 @@ jobs:
       with:
         python-version: "3.10"
 
-    - name: Install uv
-      run: pip install uv
+    - name: Install Azure Functions Core Tools
+      run: npm install -g azure-functions-core-tools@4 --unsafe-perm true
 
-    - name: Install backend dependencies
-      working-directory: backend
-      run: uv sync --no-dev
-
-    - name: Azure Login (OIDC)
+    - name: Log in to Azure (OIDC)
       uses: azure/login@v2
       with:
         client-id: ${{ secrets.AZURE_CLIENT_ID }}
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    - name: Deploy Azure Function App
-      uses: Azure/functions-action@v1
-      with:
-        app-name: ${{ secrets.AZURE_FUNCTIONAPP_NAME }}
-        package: backend
+    - name: Deploy Azure Function App using Core Tools
+      working-directory: backend
+      run: func azure functionapp publish ${{ secrets.AZURE_FUNCTIONAPP_NAME }}
