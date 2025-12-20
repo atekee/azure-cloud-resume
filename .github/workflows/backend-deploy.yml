@@ -27,7 +27,7 @@ jobs:
 
     - name: Install backend dependencies
       working-directory: backend
-      run: uv sync
+      run: uv sync --no-dev
 
     - name: Azure Login (OIDC)
       uses: azure/login@v2

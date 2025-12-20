@@ -28,6 +28,9 @@ jobs:
       working-directory: backend
       run: uv sync
 
+    - name: Add backend to PYTHONPATH
+      run: echo "PYTHONPATH=$PWD/backend" >> $GITHUB_ENV
+
     - name: Run Ruff lint
       working-directory: backend
       run: uv run ruff check .

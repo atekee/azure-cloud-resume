@@ -1,4 +1,4 @@
-name: Deploy Frontend to Azure Storage
+name: Frontend Deploy
 
 on:
   push:
