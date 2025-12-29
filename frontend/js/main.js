@@ -41,11 +41,19 @@ function updateNavbarState(isBlog) {
   );
 
   sectionLinks.forEach(link => {
-    link.classList.toggle("disabled", isBlog);
+    if (isBlog) {
+      link.classList.add("disabled");
+    } else {
+      link.classList.remove("disabled");
+    }
   });
 
   if (resumeLink) {
-    resumeLink.classList.toggle("primary", isBlog);
+    if (isBlog) {
+      resumeLink.classList.add("primary");
+    } else {
+      resumeLink.classList.remove("primary");
+    }
   }
 }
 
@@ -129,7 +137,7 @@ async function handleNavigation() {
   await loadComponent("resume");
   updateNavbarState(false);
 
-  // Scroll to section if hash exists
+  // Scroll to resume section if hash exists
   if (hash) {
     setTimeout(() => {
       const target = document.getElementById(hash);
@@ -141,11 +149,45 @@ async function handleNavigation() {
 }
 
 // ===============================
-// INITIALIZATION
+// INITIALIZATION (FIXED)
 // ===============================
 document.addEventListener("DOMContentLoaded", async () => {
+  // Initial load
   await handleNavigation();
-  await initializeVisitorCounter();
 
+  // Re-handle on hash change
   window.addEventListener("hashchange", handleNavigation);
+
+  // Visitor counter animation (trigger once when visible)
+  const counterWrapper = document.getElementById("visitor-counter");
+  let hasAnimated = false;
+
+  if (!counterWrapper) return;
+
+  const observer = new IntersectionObserver(
+    async entries => {
+      for (const entry of entries) {
+        if (entry.isIntersecting && !hasAnimated) {
+          hasAnimated = true;
+          observer.disconnect();
+
+          try {
+            const hasVisited = localStorage.getItem("hasVisited");
+            const count = hasVisited
+              ? await getVisitorCount()
+              : await updateVisitorCount();
+
+            localStorage.setItem("hasVisited", "true");
+            animateCount(count);
+
+          } catch (err) {
+            console.error("Visitor counter error:", err);
+          }
+        }
+      }
+    },
+    { threshold: 0.4 }
+  );
+
+  observer.observe(counterWrapper);
 });
