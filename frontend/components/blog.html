@@ -1,0 +1,502 @@
+<header class="header">
+  <h1>The Cloud Resume Challenge</h1>
+</header>
+
+<section>
+  <h3>Overview</h3>
+  <p>
+    This project was inspired by
+    <a href="https://cloudresumechallenge.dev/docs/the-challenge/" target="_blank" rel="noopener">
+     <strong>the Cloud Resume Challenge</strong>
+    </a> and gave me an opportunity to get hands-on with modern cloud engineering tools. While the
+    end result is a simple resume website, the real value came from treating it
+    like a real-world project and applying proper architecture, automation, and
+    infrastructure best practices throughout the process.
+  </p>
+
+  <p>
+    The diagram below illustrates the overall structure and flow of the system.
+    The frontend and backend codes are available on
+    <a href="https://github.com/atekee/azure-cloud-resume" target="_blank" rel="noopener">
+      <strong>GitHub</strong>.
+    </a>
+  </p>
+
+  <img
+    src="./assets/images/architecture-diagram.png"
+    alt="Cloud Resume Challenge architecture diagram"
+    style="width:100%; max-width:800px; display:block; margin:1.5rem auto;"
+  />
+</section>
+
+<section>
+  <h3>Frontend Architecture</h3>
+  <p>
+    The Cloud Resume Challenge requires the resume to be built using
+    <strong>plain HTML and CSS</strong>, deployed as an <strong>Azure Static Website</strong>,
+    with a simple <strong>JavaScript-based visitor counter</strong> layered on top.
+  </p>
+
+  <p>
+    Before starting this project, I had <strong>no hands-on experience with
+    HTML or JavaScript</strong>. Rather than using a resume template,
+    I chose to build everything from scratch to better understand
+    how websites are created, hosted, and served.
+  </p>
+
+  <p>
+    For the <strong>initial setup</strong>, I created a very basic HTML structure
+    along with a <strong>mock JavaScript file</strong> that simply printed a visitor count to the page.
+    This allowed me to focus on getting the frontend working locally before introducing
+    any cloud dependencies.
+  </p>
+
+  <p>
+    <strong>Example mock visitor counter code:</strong>
+  </p>
+
+  <pre>
+  function loadMockVisitorCount() {
+  const span = document.getElementById("count");
+  span.textContent = Math.floor(100 + Math.random() * 50);
+}
+  </pre>
+
+  <p>
+    Once the site was functioning locally, I moved on to
+    <a href="https://azure.microsoft.com/en-us/pricing/purchase-options/azure-account" target="_blank" rel="noopener">
+    <strong>Azure</strong></a>. After creating an Azure account, <strong>the first step was setting up budget alerts</strong> to avoid unexpected
+    charges during experimentation and deployment.
+  </p>
+
+  <p>
+    From there, I created a <strong>resource group</strong> and a
+    <strong>storage account</strong>, enabled
+    <strong>static website hosting</strong>, and uploaded the frontend files
+    (including the mock visitor counter) to the
+    <strong><i>$web</i> container</strong>. After deployment, I verified
+    that the public endpoint was accessible and serving content correctly.
+  </p>
+
+  <p>
+    At this stage, the challenge requires the site to be served over
+    <strong>HTTPS</strong>, typically using Azure CDN. While
+    researching this step, I discovered that Azure CDN Classic is being
+    deprecated and replaced by Azure Front Door which
+    introduces higher costs.
+  </p>
+
+  <p>
+    To keep the solution <strong>simple and cost-effective</strong>, I decided
+    to use <a href="https://azure.microsoft.com/en-us/pricing/purchase-options/azure-account" target="_blank" rel="noopener">
+    <strong>Cloudflare</strong></a> instead. I created a Cloudflare account
+    and purchased a custom domain:
+    <strong>atabaykadiroglu.com</strong>.
+  </p>
+
+  <p>
+    Within Cloudflare, I configured <strong>DNS records using a proxied CNAME</strong>,
+    enabled <strong>SSL/TLS</strong>, forced <strong>HTTPS</strong>, and turned on
+    <strong>caching</strong>. Cloudflare now handles HTTPS termination and CDN
+    caching through its global edge network.
+  </p>
+
+  <p>
+    Finally, I returned to the <strong>Azure Portal</strong> and configured the
+    custom domain using <strong>indirect CNAME validation</strong>, which Azure
+    verifies via Cloudflare’s <strong><i>asverify</i> DNS record</strong> . Once validation succeeded,
+    the domain was officially connected.
+  </p>
+
+  <p>
+    At this point, the frontend architecture consisted of:
+  </p>
+
+  <ul>
+    <li>An Azure-hosted static resume website</li>
+    <li>A Cloudflare-managed custom domain</li>
+    <li>HTTPS enabled via Cloudflare</li>
+    <li>Global CDN caching through Cloudflare’s edge network</li>
+    <li>A custom domain validated in Azure</li>
+  </ul>
+</section>
+
+<section>
+  <h3>Backend Architecture</h3>
+
+  <p>
+    The backend was the most interesting part of the project and also the most challenging.
+    Prior to this challenge, I had never worked with
+    <strong>Azure Functions</strong> or <strong>Azure Cosmos DB</strong>, so a
+    significant portion of the work involved learning new services, deployment
+    patterns, and security best practices through experimentation.
+  </p>
+
+  <p>
+    The visitor counter is backed by <strong>Azure Cosmos DB using the Table Storage API</strong>.
+  </p>
+
+  <p>
+    The data model is intentionally minimal: a single table named <strong>VisitorTable</strong> containing exactly one row.
+  </p>
+
+  <pre>
+PartitionKey: "resume"
+RowKey: "1"
+count: &lt;integer&gt;
+  </pre>
+
+  <p>
+    Every time someone visits the site, the backend <strong>reads</strong> this row,
+    <strong>increments</strong> the count and <strong>writes</strong> it back.
+    This approach keeps the backend lightweight while still demonstrating real database interaction.
+  </p>
+
+  <p>
+    To interact with Cosmos DB, I built a small <strong>Python Azure Function App</strong>
+    using the newer
+    <a href="https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference-python?tabs=get-started%2Casgi%2Capplication-level&pivots=python-mode-decorators" target="_blank" rel="noopener">
+    <strong>v2 programming model based on decorators</strong></a>.
+    The Function App exposes only two endpoints and Azure Functions handles the heavy lifting including scaling, routing, logging, and packaging.
+  </p>
+
+  <pre>
+  GET  /visitor/get
+  POST /visitor/update
+  </pre>
+
+  <p>
+    As part of the Azure Cloud Resume Challenge, all backend resources were deployed
+    using <strong>ARM templates</strong>. This included the Azure Function App, the
+    Cosmos DB account, and the supporting infrastructure. This was also the point
+    where I ran into my <strong>first real deployment issue</strong>.
+    </p>
+
+  <p>
+    During the initial deployment of the Function App, the ARM template failed with the following error:
+  </p>
+
+  <pre>
+  {
+    "code": "SubscriptionIsOverQuotaForSku",
+    "message": "Operation cannot be completed without additional quota"
+  }
+  </pre>
+
+  <p>
+    After digging into the error, I learned that my Azure subscription did not have
+    enough available quota in the <strong>East US</strong> region to deploy a
+    Consumption plan Azure Function App. Certain SKUs depend on regional capacity,
+    and popular regions like East US can be constrained, especially for new or
+    free-tier subscriptions.
+  </p>
+
+  <p>
+    The fix turned out to be simple. I redeployed the Function App to the
+    <strong>Central US</strong> region, where sufficient capacity was available.
+    No changes to the ARM templates were required beyond updating the region
+    configuration.
+  </p>
+
+  <p>
+    Once redeployed, the infrastructure provisioned successfully and all backend
+    services came online as expected.
+  </p>
+
+  <p>
+    At this point, I had a fully working serverless API endpoint:
+  </p>
+
+  <pre>
+  https://&lt;functionapp&gt;.azurewebsites.net/api/visitor/get
+  </pre>
+
+  <p>
+    But there was a problem, the backend was functional but <strong>not yet secure</strong>.
+    At this stage, the Function App endpoints could be called directly by anyone
+    who knew the URL.
+  </p>
+
+  <p>
+    That meant a malicious user could easily:
+  </p>
+
+  <ul>
+    <li>Spam the API</li>
+    <li>Artificially increase the visitor counter</li>
+    <li>Run up backend costs</li>
+    <li>Attempt to overload or DDoS the Function App</li>
+  </ul>
+
+  <p>
+    I needed a way to <strong>secure the backend</strong>, control who could access
+    it, and ensure that <strong>no secrets were ever exposed to the browser</strong>.
+    This is where <strong>Azure API Management (APIM)</strong> came in.
+  </p>
+
+  <p>
+    APIM sits between the browser and the Function App and acts as a
+    <strong>security gate</strong>. Instead of the frontend talking directly to the
+    Function App, all requests now flow through APIM.
+  </p>
+
+  <p>
+    Using APIM allowed me to:
+  </p>
+
+  <ul>
+    <li><strong>Validate incoming requests</strong></li>
+    <li><strong>Apply rate limiting</strong> to prevent abuse</li>
+    <li><strong>Enforce CORS rules</strong></li>
+    <li><strong>Hide the Function App key</strong> from the client</li>
+    <li><strong>Inject secrets securely</strong> at runtime</li>
+    <li><strong>Expose a clean, stable API endpoint</strong> to the frontend</li>
+  </ul>
+
+  <p>
+    To make this work, I created two <strong>Named Values</strong> in APIM:
+  </p>
+
+  <ul>
+    <li>
+      <strong>PublicApiKey</strong> — a key that is safe to expose in frontend
+      JavaScript
+    </li>
+    <li>
+      <strong>FunctionKey</strong> — the secret key used internally by the Azure
+      Function App
+    </li>
+  </ul>
+
+  <p>
+    Exposing the Function App key directly in JavaScript would have been a
+    <strong>terrible idea</strong>. Instead, APIM injects it internally using a
+    policy:
+  </p>
+
+  <pre>
+  &lt;set-header name="x-functions-key"&gt;
+    &lt;value&gt;{{FunctionKey}}&lt;/value&gt;
+  &lt;/set-header&gt;
+  </pre>
+
+  <p>
+    With this setup, the request flow now looks like this:
+  </p>
+
+  <ol>
+    <li>
+      The browser sends a request with
+      <code>x-api-key: PublicApiKey</code>
+    </li>
+    <li>
+      APIM validates the request, applies rate limits, and enforces CORS
+    </li>
+    <li>
+      APIM injects the <code>x-functions-key</code> internally
+    </li>
+    <li>
+      APIM forwards the request to the Azure Function App
+    </li>
+    <li>
+      The Function App reads from and writes to Cosmos DB
+    </li>
+  </ol>
+
+  <p>
+    At no point are <strong>real secrets exposed</strong> to end users.
+  </p>
+
+  <p>
+    With APIM in place, updating the frontend was straightforward. Instead of
+    calling the Function App directly, the JavaScript now calls APIM:
+  </p>
+
+  <pre>
+  const API_BASE_URL = "https://&lt;apim&gt;.azure-api.net/visitor";
+
+  await fetch(`${API_BASE_URL}/update`, {
+    method: "POST",
+    headers: { "x-api-key": API_KEY }
+  });
+  </pre>
+
+  <p>
+    This approach keeps the backend secure while still allowing the website to
+    update the visitor count, and it closely mirrors how
+    <strong>real production APIs are designed and protected</strong>.
+  </p>
+
+</section>
+
+
+<section>
+  <h3>CI/CD Architecture</h3>
+
+  <p>
+    Once the backend was finally <strong>stable and secure</strong>, I moved on to
+    setting up <strong>CI/CD</strong>. The goal was pretty straightforward:
+  </p>
+
+  <ul>
+    <li><strong>Every commit should be tested</strong></li>
+    <li><strong>Every merge to <code>main</code> should deploy automatically</strong></li>
+    <li><strong>No secrets should ever live in GitHub</strong></li>
+    <li>
+      And ideally, <strong>I should never have to touch the Azure Portal again</strong>
+    </li>
+  </ul>
+
+  <p>
+    The first challenge was writing <strong>unit tests</strong>. I added test cases
+    to make sure the visitor counter logic worked correctly: retrieving the current
+    count, creating the row if it didn’t exist yet, and incrementing the count
+    properly.
+  </p>
+
+  <p>
+    To avoid accidentally hitting <strong>Cosmos DB</strong> during tests, I
+    mocked the entire <strong>Table API</strong>. This allowed everything to run
+    locally and in CI without touching real cloud resources.
+  </p>
+
+  <p>
+    Once the tests were passing locally, I created a <strong>backend CI workflow</strong>
+    that runs on every push and pull request. The workflow installs <strong>Python</strong>, installs
+    <strong>uv</strong>, pulls in backend dependencies, runs
+    <strong>ruff</strong> for linting and formatting checks, and finally runs
+    <strong>pytest</strong>. This gave me fast feedback any time I broke something.
+  </p>
+
+  <p>
+    During this step, I ran into an unexpected issue. The GitHub Actions build kept
+    asking for a <code>local.settings.json</code> file, which normally contains my
+    Cosmos DB connection string. Azure Functions requires this file during
+    packaging, but committing secrets to GitHub was obviously not an option.
+  </p>
+
+  <p>
+    As a workaround, I created a second file called
+    <code>local.settings.ci.json</code> that contains only placeholder values and
+    no real secrets. During CI/CD, the workflow simply copies it into place:
+  </p>
+
+  <pre>
+run: cp backend/local.settings.ci.json backend/local.settings.json
+  </pre>
+
+  <p>
+    This effectively <strong>tricks the build process</strong> into packaging the
+    Function App without exposing any credentials.
+  </p>
+
+  <p>
+    Another important piece was authentication. Instead of storing Azure
+    credentials in GitHub secrets, I configured
+    <strong>Azure OpenID Connect (OIDC)</strong> for GitHub Actions. This allows
+    GitHub to authenticate directly with Azure using
+    <strong>short-lived tokens</strong>.
+  </p>
+
+  <p>
+    Behind the scenes, GitHub requests a temporary token during each run, and
+    Azure only allows it to deploy to the specific resources I authorized. There
+    are <strong>no long-lived secrets</strong>, no manual key rotation, and the
+    setup is much cleaner overall.
+  </p>
+
+  <p>
+    Even after all of that, I still ran into one more interesting problem. I was
+    originally using the built-in Azure Functions deploy action, but it didn’t
+    play nicely with the newer <strong>v2 Python programming model</strong> and
+    decorators. Deployments would partially break the Function App and sometimes
+    even remove endpoints.
+  </p>
+
+  <p>
+    After some trial and error, I switched to using
+    <strong>Azure Functions Core Tools</strong> directly inside the workflow:
+  </p>
+
+  <pre>
+run: func azure functionapp publish ${{ secrets.AZURE_FUNCTIONAPP_NAME }}
+  </pre>
+
+  <p>
+    This mirrors exactly how I deploy the Function App from my local machine, and
+    it turned out to be <strong>far more reliable</strong>.
+  </p>
+
+  <p>
+    With the backend CI/CD complete, I still needed automation for the frontend.
+    I created a separate workflow that uploads updated HTML, CSS, and JavaScript
+    files to <strong>Azure Storage</strong> and then
+    <strong>purges the Cloudflare cache</strong> so changes go live globally.
+  </p>
+
+  <p>
+    Now, when I update the visitor counter logic or tweak my resume layout, the
+    site updates everywhere in about <strong>30 seconds</strong> with no manual
+    steps.
+  </p>
+
+  <p>
+    At the end of it all, my CI/CD setup looked like this:
+  </p>
+
+  <ul>
+    <li>
+      <strong>backend-ci.yml</strong> — runs tests and linting on every push and
+      pull request
+    </li>
+    <li>
+      <strong>backend-deploy.yml</strong> — builds the Function App, injects CI
+      settings, logs into Azure via OIDC, and deploys using Core Tools
+    </li>
+    <li>
+      <strong>frontend-deploy.yml</strong> — uploads frontend files to Azure
+      Storage and purges the Cloudflare cache
+    </li>
+  </ul>
+</section>
+
+
+<section>
+  <h3>Lessons Learned</h3>
+
+  <p>
+    Throughout this project, I relied heavily on tools like
+    <strong>GitHub Copilot</strong> and <strong>ChatGPT</strong>, especially when
+    working on the backend and Infrastructure as Code. They were incredibly
+    helpful for learning new services and patterns quickly, but I also learned
+    that they can be <strong>misleading during troubleshooting</strong>,
+    particularly when dealing with opaque deployment errors.
+  </p>
+
+  <p>
+    That experience reinforced the importance of understanding what the tooling
+    is doing under the hood rather than blindly following suggestions.
+  </p>
+
+  <p>
+    Securing the website and making sure that
+    <strong>no credentials were ever exposed</strong> was another major takeaway.
+    Designing proper security boundaries took time, but it made me appreciate
+    how critical that work is in real production environments and why it’s
+    always worth the effort.
+  </p>
+
+  <p>
+    Finally, this project completely changed how I think about
+    <strong>Infrastructure as Code</strong>. I had manually spun up cloud
+    resources before, but I hadn’t fully appreciated how essential IaC becomes
+    as projects grow and change over time.
+  </p>
+
+  <p>
+    Being able to redeploy, modify, and version infrastructure safely made the
+    entire workflow smoother and more reliable. It also gave me a much deeper
+    appreciation for the <strong>DevOps work</strong> and preparation that
+    enables teams to move quickly without breaking things.
+  </p>
+</section>
