@@ -1,12 +1,14 @@
 /*
   Main frontend script
-  Integrates routing, component loading, navbar state,
-  and real visitor counter (no mocks).
+  - Handles routing (resume / blog)
+  - Loads components dynamically
+  - Manages navbar state
+  - Integrates real visitor counter backend
 */
 
 /*
   Do not commit API information to public repositories.
-  Use placeholders and replace them during your deployment process.
+  Use placeholders and replace them during deployment.
 */
 const API_BASE_URL = "__API_BASE_URL__";
 const API_KEY = "__API_KEY_PLACEHOLDER__";
@@ -39,24 +41,16 @@ function updateNavbarState(isBlog) {
   );
 
   sectionLinks.forEach(link => {
-    if (isBlog) {
-      link.classList.add("disabled");
-    } else {
-      link.classList.remove("disabled");
-    }
+    link.classList.toggle("disabled", isBlog);
   });
 
   if (resumeLink) {
-    if (isBlog) {
-      resumeLink.classList.add("primary");
-    } else {
-      resumeLink.classList.remove("primary");
-    }
+    resumeLink.classList.toggle("primary", isBlog);
   }
 }
 
 // ===============================
-// VISITOR COUNTER (REAL API)
+// VISITOR COUNTER (REAL BACKEND)
 // ===============================
 async function getVisitorCount() {
   try {
@@ -72,7 +66,6 @@ async function getVisitorCount() {
 
     const data = await response.json();
     return data.count;
-
   } catch (error) {
     console.error("Error in getVisitorCount:", error);
     return null;
@@ -93,33 +86,13 @@ async function updateVisitorCount() {
 
     const data = await response.json();
     return data.count;
-
   } catch (error) {
     console.error("Error in updateVisitorCount:", error);
     return null;
   }
 }
 
-// Count-up animation
-function animateCount(target) {
-  const el = document.getElementById("count");
-  if (!el || target === null) return;
-
-  let current = 0;
-  const increment = Math.ceil(target / 60);
-
-  const interval = setInterval(() => {
-    current += increment;
-    if (current >= target) {
-      el.textContent = target;
-      clearInterval(interval);
-    } else {
-      el.textContent = current;
-    }
-  }, 25);
-}
-
-// Count visitor only once using localStorage
+// Count visitor only once per browser
 async function initializeVisitorCounter() {
   const hasVisited = localStorage.getItem("hasVisited");
   let count;
@@ -131,7 +104,12 @@ async function initializeVisitorCounter() {
     count = await getVisitorCount();
   }
 
-  return count;
+  if (count !== null) {
+    const counterEl = document.getElementById("visitor-count");
+    if (counterEl) {
+      counterEl.textContent = count;
+    }
+  }
 }
 
 // ===============================
@@ -151,7 +129,7 @@ async function handleNavigation() {
   await loadComponent("resume");
   updateNavbarState(false);
 
-  // Scroll to resume section if hash exists
+  // Scroll to section if hash exists
   if (hash) {
     setTimeout(() => {
       const target = document.getElementById(hash);
@@ -166,31 +144,8 @@ async function handleNavigation() {
 // INITIALIZATION
 // ===============================
 document.addEventListener("DOMContentLoaded", async () => {
-  // Initial page load
   await handleNavigation();
+  await initializeVisitorCounter();
 
-  // Re-handle on hash change
   window.addEventListener("hashchange", handleNavigation);
-
-  // Visitor counter animation (trigger once when visible)
-  const counterWrapper = document.getElementById("visitor-counter");
-  let hasAnimated = false;
-
-  if (counterWrapper) {
-    const observer = new IntersectionObserver(
-      async entries => {
-        entries.forEach(async entry => {
-          if (entry.isIntersecting && !hasAnimated) {
-            hasAnimated = true;
-            const count = await initializeVisitorCounter();
-            animateCount(count);
-            observer.disconnect();
-          }
-        });
-      },
-      { threshold: 0.4 }
-    );
-
-    observer.observe(counterWrapper);
-  }
 });
