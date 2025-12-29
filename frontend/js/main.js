@@ -120,6 +120,25 @@ async function initializeVisitorCounter() {
   }
 }
 
+// Count-up animation
+function animateCount(target) {
+  const el = document.getElementById("visitor-count");
+  if (!el) return;
+
+  let current = 0;
+  const increment = Math.ceil(target / 60);
+
+  const interval = setInterval(() => {
+    current += increment;
+    if (current >= target) {
+      el.textContent = target;
+      clearInterval(interval);
+    } else {
+      el.textContent = current;
+    }
+  }, 25);
+}
+
 // ===============================
 // ROUTING + CONTENT LOADING
 // ===============================
