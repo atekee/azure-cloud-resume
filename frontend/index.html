@@ -5,19 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Cloud Resume</title>
 
-  <!-- Load CSS -->
   <link rel="stylesheet" href="./css/styles.css" />
 </head>
 <body>
 
+  <!-- Sticky navigation -->
+  <nav id="navbar">
+  <a href="#" data-nav="resume" id="resume-link">Home</a>
+  <a href="#about" data-nav="section">About</a>
+  <a href="#projects" data-nav="section">Personal Projects</a>
+  <a href="#experience" data-nav="section">Experience & Education</a>
+  <a href="#contact" data-nav="section">Contact</a>
+  <a href="#blog" data-nav="blog">Blog</a>
+  </nav>
+
   <main id="resume-container">
-    <!-- resume.html will be injected here -->
-    <div id="visitor-counter">
-      Visitor Count: <span id="visitor-count"></span>
-    </div>
+    <!-- resume OR blog component loads here -->
   </main>
 
-  <!-- Load JS -->
+  <footer id="visitor-counter">
+    You are visitor: <span id="count">0</span>
+  </footer>
+
   <script src="./js/main.js"></script>
 </body>
 </html>

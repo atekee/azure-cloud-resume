@@ -1,28 +1,257 @@
+/* ===============================
+   GLOBAL
+   =============================== */
 body {
-  font-family: Arial, sans-serif;
+  font-family: "Georgia", "Times New Roman", serif;
+  background: #f7f2e8;            /* warm paper */
+  color: #2b2b2b;                 /* ink */
   margin: 0;
-  background: #f7f7f7;
-  color: #333;
+  /* Prevent layout shift when scrollbar appears */
+  overflow-y: scroll;
 }
 
-#resume-container {
-  max-width: 900px;
-  margin: auto;
-  padding: 2rem;
-  background: white;
-  border-radius: 8px;
+/* ===============================
+   NAVIGATION
+   =============================== */
+#navbar {
+  position: sticky;
+  top: 0;
+  background: #c28b00;            /* burnt yellow */
+  padding: 1rem 0;
+  z-index: 1000;
+
+  display: flex;
+  justify-content: center;
 }
 
-#visitor-counter {
-  margin-top: 2rem;
+#navbar a {
+  color: #fff8e6;
+  text-decoration: none;
+  font-weight: bold;
+  letter-spacing: 0.08em;
+  margin: 0 1.2rem;
+  font-size: 0.95rem;
+}
+
+#navbar a:hover {
+  text-decoration: underline;
+}
+
+/* Disabled nav links (used when blog is active) */
+#navbar a.disabled {
+  pointer-events: none;
+  opacity: 0.4;
+  text-decoration: none;
+}
+
+/* Highlight primary route (e.g. Resume when Blog is open) */
+#navbar a.primary {
+  text-decoration: underline;
+  text-underline-offset: 4px;
   font-weight: bold;
 }
 
+/* ===============================
+   MAIN CONTAINER
+   =============================== */
+#resume-container {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 2.5rem;
+  background: #fffdf8;
+  border: 1px solid #d8cba8;
+
+  /* Helps prevent flash when components are swapped */
+  min-height: 60vh;
+}
+
+/* ===============================
+   HEADER
+   =============================== */
+.header {
+  text-align: center;
+  padding-bottom: 1rem;
+  margin-bottom: 1.2rem;
+}
+
 .profile-pic {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
+  width: 150px;
+  height: 150px;
   object-fit: cover;
-  display: block;
   margin-bottom: 1rem;
+  border-radius: 50%;
+}
+
+/* ===============================
+   TYPOGRAPHY
+   =============================== */
+h1 {
+  font-size: 2.4rem;
+  margin: 0.5rem 0;
+}
+
+h2 {
+  font-size: 1.2rem;
+  font-weight: normal;
+  margin: 0;
+}
+
+h3 {
+  border-bottom: 2px solid #c28b00;
+  padding-bottom: 0.3rem;
+  margin-top: 2rem;
+  font-size: 1.4rem;
+}
+
+h4 {
+  font-size: 1.05rem;
+}
+
+/* Ensure anchor scrolling works with sticky navbar */
+section {
+  scroll-margin-top: 90px;
+}
+
+/* ===============================
+   LINKS
+   =============================== */
+section a {
+  color: #7a5500;                 /* darker burnt yellow */
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+section a:hover {
+  color: #000;
+}
+
+/* ===============================
+   SOCIAL LINKS
+   =============================== */
+.social-links {
+  margin-top: 1rem;
+}
+
+.social-links a {
+  display: inline-block;
+  margin: 0 0.6rem;
+}
+
+.social-links img {
+  width: 22px;
+  height: 22px;
+  filter: grayscale(100%);
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.social-links a:hover img {
+  transform: scale(1.1);
+  filter: grayscale(0%);
+}
+
+/* ===============================
+   EXPERIENCE / ROLES
+   =============================== */
+#experience h4 {
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+#experience p {
+  margin-top: 0.15rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Grouped role container */
+.role {
+  margin-bottom: 1.4rem;
+}
+
+.role h4 {
+  margin-bottom: 0.25rem;
+}
+
+.role p {
+  margin-top: 0.15rem;
+  margin-bottom: 0.4rem;
+}
+
+/* Role header layout (title + dates) */
+.role-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  column-gap: 1rem;
+}
+
+.role-dates {
+  white-space: nowrap;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* ===============================
+   VISITOR COUNTER
+   =============================== */
+#visitor-counter {
+  text-align: center;
+  padding: 1.5rem;
+  font-weight: bold;
+
+  /* Optional: visually separate from resume body */
+  border-top: 1px solid #e0d4b2;
+  margin-top: 2rem;
+}
+
+/* Animated number */
+#count {
+  font-size: 2rem;
+}
+
+/*
+  If you ever remove the visitor counter entirely,
+  you can safely comment out this whole section.
+*/
+
+/* ===============================
+   CODE BLOCKS (BLOG + PROJECTS)
+   =============================== */
+pre {
+  background: #eee7d8;            /* warm parchment */
+  border: 1px solid #d6c9a8;
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: 1rem 0;
+}
+
+code {
+  background: #eee7d8;
+  padding: 0.15rem 0.35rem;
+  border-radius: 3px;
+  font-size: 0.9rem;
+}
+
+/* ===============================
+   MOBILE TWEAKS
+   =============================== */
+@media (max-width: 600px) {
+  .role-header {
+    grid-template-columns: 1fr;
+  }
+
+  .role-dates {
+    margin-top: 0.2rem;
+  }
+
+  #navbar a {
+    margin: 0 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  #resume-container {
+    padding: 1.5rem;
+  }
 }
